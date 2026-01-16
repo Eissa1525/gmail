@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AppSettings } from '../types';
 import { ICONS } from '../constants';
 
@@ -11,6 +11,11 @@ interface SettingsProps {
 
 export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange, isGmailConnected }) => {
   const [localSettings, setLocalSettings] = useState(settings);
+  const [currentUrl, setCurrentUrl] = useState('');
+
+  useEffect(() => {
+    setCurrentUrl(window.location.origin);
+  }, []);
 
   const handleSave = () => {
     onSettingsChange(localSettings);
@@ -21,29 +26,50 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange, 
     setLocalSettings({ ...localSettings, [key]: list });
   };
 
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    alert('Copied to clipboard!');
+  };
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
       <div className="lg:col-span-2 space-y-6">
         {/* Connection Setup Guide */}
-        <section className={`p-6 rounded-2xl border ${isGmailConnected ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200'}`}>
-          <h3 className={`font-bold mb-3 flex items-center gap-2 ${isGmailConnected ? 'text-green-800' : 'text-amber-800'}`}>
+        <section className={`p-6 rounded-2xl border ${isGmailConnected ? 'bg-green-50 border-green-200' : 'bg-blue-50 border-blue-200 shadow-sm'}`}>
+          <h3 className={`font-bold mb-4 flex items-center gap-2 ${isGmailConnected ? 'text-green-800' : 'text-blue-800'}`}>
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
-            {isGmailConnected ? 'Live Connection Instructions' : 'Real Email Setup (Required for Sync)'}
+            {isGmailConnected ? 'Connection Active (Sandbox)' : 'Technical URL for Real Sync'}
           </h3>
-          <div className="space-y-4 text-sm leading-relaxed">
-            <p className={isGmailConnected ? 'text-green-700' : 'text-amber-700'}>
-              {isGmailConnected 
-                ? "You have connected a mock account. To sync with your real, live mailbox, the application must be moved from this developer sandbox to a production server."
-                : "Currently, you are seeing simulated emails. To bridge this app to your actual Gmail inbox, follow these technical steps:"}
+          
+          <div className="space-y-4">
+            <p className="text-sm text-slate-600 leading-relaxed">
+              To connect your real Gmail, you must register this app in the <a href="https://console.cloud.google.com" target="_blank" className="text-blue-600 font-bold underline">Google Cloud Console</a>. Use the URL below as your <strong>Authorized Redirect URI</strong>:
             </p>
-            <ol className={`list-decimal list-inside space-y-1 ${isGmailConnected ? 'text-green-800 font-medium' : 'text-amber-800 font-medium'}`}>
-              <li>Enable <strong>Gmail API</strong> in your Google Cloud Console.</li>
-              <li>Create <strong>OAuth 2.0 Credentials</strong> (Web Application).</li>
-              <li>Add this app's URL to the <strong>Authorized Redirect URIs</strong>.</li>
-              <li>Deploy this code to a hosting provider (Vercel/Netlify).</li>
-            </ol>
+            
+            <div className="flex items-center gap-2">
+              <div className="flex-1 bg-white border border-blue-200 rounded-lg p-3 font-mono text-xs text-blue-700 truncate shadow-inner">
+                {currentUrl || 'Detecting URL...'}
+              </div>
+              <button 
+                onClick={() => copyToClipboard(currentUrl)}
+                className="bg-blue-600 text-white px-4 py-3 rounded-lg text-xs font-bold hover:bg-blue-700 transition-all active:scale-95"
+              >
+                Copy URL
+              </button>
+            </div>
+
+            <div className="bg-white/50 p-4 rounded-xl space-y-3">
+              <h4 className="text-xs font-bold text-slate-500 uppercase">Configuration Steps:</h4>
+              <ol className="text-xs text-slate-700 space-y-2 list-decimal list-inside">
+                <li>Go to <strong>APIs & Services</strong> &gt; <strong>Credentials</strong>.</li>
+                <li>Click <strong>Create Credentials</strong> &gt; <strong>OAuth Client ID</strong>.</li>
+                <li>Select <strong>Web Application</strong> as the type.</li>
+                <li>Paste the <strong>Copied URL</strong> above into the "Authorized redirect URIs" field.</li>
+                <li>Save and use the generated <strong>Client ID</strong> to authorize your email.</li>
+              </ol>
+            </div>
           </div>
         </section>
 
@@ -60,15 +86,15 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange, 
               <div className="grid grid-cols-2 gap-3 p-1 bg-slate-100 rounded-xl">
                 <button 
                   onClick={() => setLocalSettings({...localSettings, filterMode: 'keywords'})}
-                  className={`py-2 text-sm font-bold rounded-lg transition-all ${localSettings.filterMode === 'keywords' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500'}`}
+                  className={`py-2 text-sm font-bold rounded-lg transition-all ${localSettings.filterMode === 'keywords' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-600'}`}
                 >
-                  Safe (Keywords Only)
+                  Safe (Keywords)
                 </button>
                 <button 
                   onClick={() => setLocalSettings({...localSettings, filterMode: 'all'})}
-                  className={`py-2 text-sm font-bold rounded-lg transition-all ${localSettings.filterMode === 'all' ? 'bg-rose-500 text-white shadow-sm' : 'text-slate-500'}`}
+                  className={`py-2 text-sm font-bold rounded-lg transition-all ${localSettings.filterMode === 'all' ? 'bg-rose-500 text-white shadow-sm' : 'text-slate-600'}`}
                 >
-                  Aggressive (Reply All)
+                  Reply All
                 </button>
               </div>
             </div>
@@ -114,7 +140,7 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange, 
             onClick={() => setLocalSettings(settings)}
             className="px-6 py-2 rounded-xl text-slate-600 font-bold hover:bg-slate-100"
           >
-            Cancel
+            Reset
           </button>
           <button 
             onClick={handleSave}
@@ -147,7 +173,7 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange, 
             <div className="pt-4 flex items-center justify-between border-t border-slate-100 mt-4">
               <div>
                 <p className="text-sm font-bold text-slate-800">Auto-Pilot</p>
-                <p className="text-[10px] text-slate-500">Bypass review queue</p>
+                <p className="text-[10px] text-slate-500">Immediate AI delivery</p>
               </div>
               <button 
                 onClick={() => setLocalSettings({...localSettings, autoPilot: !localSettings.autoPilot})}
@@ -160,21 +186,26 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange, 
         </section>
 
         <div className="bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-inner text-white">
-          <h3 className="text-blue-400 font-bold text-sm mb-2">Technical Info</h3>
+          <h3 className="text-blue-400 font-bold text-sm mb-4 flex items-center gap-2">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+            System Info
+          </h3>
           <div className="space-y-3">
             <div className="flex justify-between text-[10px]">
-              <span className="text-slate-500 font-bold uppercase">AI Engine</span>
-              <span className="text-slate-300 font-mono">Gemini 3 Pro</span>
+              <span className="text-slate-500 font-bold uppercase tracking-tight">App URL</span>
+              <span className="text-slate-300 font-mono truncate ml-4">{currentUrl}</span>
             </div>
             <div className="flex justify-between text-[10px]">
-              <span className="text-slate-500 font-bold uppercase">Backend Sync</span>
+              <span className="text-slate-500 font-bold uppercase tracking-tight">Sync State</span>
               <span className={isGmailConnected ? 'text-green-500 font-bold' : 'text-amber-500 font-bold'}>
-                {isGmailConnected ? 'MOCK AUTH' : 'OFFLINE'}
+                {isGmailConnected ? 'GMAIL_MOCK_READY' : 'LOCAL_ONLY'}
               </span>
             </div>
             <div className="flex justify-between text-[10px]">
-              <span className="text-slate-500 font-bold uppercase">Real Sync Env</span>
-              <span className="text-rose-400">Node.js + OAuth Required</span>
+              <span className="text-slate-500 font-bold uppercase tracking-tight">OAuth Status</span>
+              <span className="text-rose-400 font-bold">MISSING_CLIENT_SECRET</span>
             </div>
           </div>
         </div>
