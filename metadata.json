@@ -1,0 +1,5 @@
+{
+  "name": "Gemini Auto-Email Dashboard",
+  "description": "A sophisticated dashboard to manage and monitor an AI-powered email automation system that uses Gemini to intelligently respond to incoming messages.",
+  "requestFramePermissions": []
+}
